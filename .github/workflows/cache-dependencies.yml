@@ -1,1 +1,58 @@
-
+name: Cache dependencies
+on: workflow_dispatch
+jobs:
+  test-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v3
+      - name: Cache Dependencies
+        id: cache-dependencies
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache-key_${{ hashFiles('**/package-lock.json')}}
+      - name: Install Depdendencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Run Test
+        run: npm run test
+  build-project:
+    needs: test-project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v3
+      - name: Cache Dependencies
+        id: cache-dependencies
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache-key_${{ hashFiles('**/package-lock.json')}}
+      - name: Install Depdendencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Build Project
+        run: npm run build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: build
+  deploy-project:
+    needs: build-project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+          path: build
+      - name: Deploy Project Files
+        run: ls
+      - name: Deploy Project
+        run: echo "Deploying!!!!"
