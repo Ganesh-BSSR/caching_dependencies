@@ -1,0 +1,17 @@
+name: Reusable Workflow
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: Name of the articat you wanted to push
+        type: string
+        default: dist
+        required: true
+jobs:
+  code_management:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Code
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.artifact_name }}
